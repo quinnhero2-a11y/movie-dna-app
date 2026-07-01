@@ -13,16 +13,13 @@ TMDB_API_KEY = "82ffb3235498c86f4e0a70fdbd02bcd7"
 # --- INITIALIZE TRACKING MEMORY (ALGORITHMIC PROFILE) ---
 if "my_library" not in st.session_state: st.session_state.my_library = []
 if "dna_results" not in st.session_state: st.session_state.dna_results = []
-
-# Dynamic Profile Vectors (Keeps track of how many times you like specific genres)
-if "genre_weights" not in st.session_state:
-    st.session_state.genre_weights = {}
+if "genre_weights" not in st.session_state: st.session_state.genre_weights = {}
+if "feed_pool" not in st.session_state: st.session_state.feed_pool = []
 
 def fetch_movie_details(query, search_type="search"):
     if search_type == "search":
         url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={query}&language=en-US"
     elif search_type == "popular":
-        # Pulls from a completely randomized page pool across history to break the 2026 bias
         random_page = random.randint(1, 150)
         url = f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page={random_page}&language=en-US"
     elif search_type == "recommendations":
@@ -37,7 +34,6 @@ def get_poster_url(path):
     if path: return f"https://image.tmdb.org/t/p/w342{path}"
     return "https://via.placeholder.com/342x513?text=No+Poster"
 
-# Update personal algorithm weights based on user interactions
 def train_profile_algorithm(genre_ids, weight_value):
     for g_id in genre_ids:
         st.session_state.genre_weights[g_id] = st.session_state.genre_weights.get(g_id, 0) + weight_value
@@ -79,13 +75,18 @@ st.markdown("<p style='color:gray; margin-top:-15px;'>Top-tier multi-vector algo
 st.divider()
 
 # --- APP NAVIGATION TABS ---
-tab1, tab2, tab3 = st.tabs(["🧬 Multi-Movie DNA Sequencer", "🎛️ Infinite Discovery Mode", "📂 My Vault"])
+tab1, tab2, tab3, tab4 = st.tabs([
+    "🧬 Multi-Movie DNA Sequencer", 
+    "🎛️ Infinite Discovery Mode", 
+    "🍿 Recommendations of the Day", 
+    "📂 My Vault"
+])
 
 # ==========================================
-# TAB 1: MOVIE DNA SEQUENCER (Smart Recommendation Math)
+# TAB 1: MOVIE DNA SEQUENCER
 # ==========================================
 with tab1:
-    st.write("Supply up to 3 target anchors. The system will extract your historical genre profile, cross-reference the plot vectors, and formulate a targeted recommendation matrix.")
+    st.write("Supply up to 3 different movies to combine their unique traits into a targeted recommendation blueprint.")
     
     col_i1, col_i2, col_i3 = st.columns(3)
     with col_i1: m1 = st.text_input("First Anchor Film:", placeholder="e.g., Inception", key="dna_m1")
@@ -97,7 +98,7 @@ with tab1:
         if not inputs:
             st.warning("Please type a movie title above to extract a profile blueprint.")
         else:
-            with st.spinner("Executing structural similarity algorithms..."):
+            with st.spinner("Decoding narrative strings..."):
                 found_ids = []
                 for title in inputs:
                     search_res = fetch_movie_details(title, "search")
@@ -107,7 +108,6 @@ with tab1:
                 for m_id in found_ids:
                     combined_recs.extend(fetch_movie_details(m_id, "recommendations"))
                 
-                # De-duplicate raw results
                 seen = set(found_ids)
                 unique_recs = []
                 for r in combined_recs:
@@ -115,20 +115,13 @@ with tab1:
                         seen.add(r['id'])
                         unique_recs.append(r)
                 
-                # --- RUN CUSTOM RANKING ALGORITHM ---
-                # Score items based on how well they match user's trained genre weights
+                # Sort based on trained similarity scores if any exist
                 for movie in unique_recs:
-                    score = 0
-                    movie_genres = movie.get('genre_ids', [])
-                    for g_id in movie_genres:
-                        score += st.session_state.genre_weights.get(g_id, 0)
+                    score = sum(st.session_state.genre_weights.get(g_id, 0) for g_id in movie.get('genre_ids', []))
                     movie['algo_score'] = score
-                
-                # Sort based on trained similarity scores
                 unique_recs = sorted(unique_recs, key=lambda x: x.get('algo_score', 0), reverse=True)
                 
-                # --- THE LEAP OF FAITH MECHANISM ---
-                # Drop a completely unexpected popular movie into the results pool to test new tastes
+                # Leap of faith wildcard element
                 if len(unique_recs) > 5:
                     wildcard_pool = fetch_movie_details("", "popular")
                     if wildcard_pool:
@@ -136,11 +129,11 @@ with tab1:
                         if wildcard['id'] not in seen:
                             wildcard['title'] = f"✨ [Leap of Faith] {wildcard['title']}"
                             unique_recs.insert(random.randint(1, 4), wildcard)
-                
+                            
                 st.session_state.dna_results = unique_recs
 
     if st.session_state.dna_results:
-        st.write(f"### Filtered Recommendations Profiles ({len(st.session_state.dna_results)} Results)")
+        st.write(f"### Found Profiles ({len(st.session_state.dna_results)} Results)")
         
         cols_per_row = 5
         for i in range(0, len(st.session_state.dna_results), cols_per_row):
@@ -169,7 +162,7 @@ with tab1:
                             st.rerun()
 
 # ==========================================
-# TAB 2: INFINITE DISCOVERY MODE (Random Engine & Training)
+# TAB 2: INFINITE DISCOVERY MODE
 # ==========================================
 with tab2:
     st.write("Rate movies as they cycle from the historical vault to actively train your recommendation weights.")
@@ -204,7 +197,6 @@ with tab2:
             
             st.divider()
             
-            # Algorithmic Controls
             st.write("**Algorithmic Profile Learning (Moves to next selection):**")
             c1, c2, c3 = st.columns(3)
             with c1:
@@ -225,7 +217,6 @@ with tab2:
             
             st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
             
-            # Utility Controls
             st.write("**Utility Storage Rules:**")
             c4, c5 = st.columns(2)
             with c4:
@@ -243,9 +234,64 @@ with tab2:
                     st.rerun()
 
 # ==========================================
-# TAB 3: DEDICATED VAULT LIBRARY
+# TAB 3: RECOMMENDATIONS OF THE DAY (Auto 3 Matches)
 # ==========================================
 with tab3:
+    st.header("✨ Your Personalized Daily Picks")
+    st.write("This feed calculates your historical interactions from Discovery Mode and dynamically predicts your taste.")
+    
+    has_weights = any(w > 0 for w in st.session_state.genre_weights.values())
+    
+    if not has_weights:
+        st.info("💡 Your daily recommendation feed is calculating. Head over to **🎛️ Infinite Discovery Mode** and rate a few movies so the engine can pick up on your flavor!")
+    else:
+        if st.button("🔄 Refresh Picks", use_container_width=True) or not st.session_state.feed_pool:
+            with st.spinner("Analyzing taste structures..."):
+                candidate_movies = []
+                for _ in range(4):
+                    candidate_movies.extend(fetch_movie_details("", "popular"))
+                
+                unique_candidates = {m['id']: m for m in candidate_movies}.values()
+                
+                scored_movies = []
+                for movie in unique_candidates:
+                    score = sum(st.session_state.genre_weights.get(g_id, 0) for g_id in movie.get('genre_ids', []))
+                    movie['algo_score'] = score
+                    scored_movies.append(movie)
+                
+                st.session_state.feed_pool = sorted(scored_movies, key=lambda x: x.get('algo_score', 0), reverse=True)[:3]
+
+        if st.session_state.feed_pool:
+            st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+            grid_cols = st.columns(3)
+            
+            for idx, movie in enumerate(st.session_state.feed_pool):
+                with grid_cols[idx]:
+                    rating = movie.get('vote_average', 0)
+                    rating_str = f"{rating:.1f}" if rating > 0 else "N/A"
+                    
+                    st.markdown(f"""
+                        <div class='img-container'>
+                            <img src='{get_poster_url(movie.get('poster_path'))}' style='width:100%; border-radius:12px;'>
+                            <div class='rating-badge' style='font-size:13px; padding:3px 7px;'>⭐ {rating_str}</div>
+                        </div>
+                        <h3 style='text-align:center; margin-top:10px;'>{movie['title']}</h3>
+                        <p style='color:gray; text-align:center; font-size:13px; margin-top:-10px;'>Released: {movie.get('release_date', 'Unknown')}</p>
+                        <p style='font-size:14px; line-height:1.5; text-align:center; min-height:100px;'>{movie.get('overview', 'No profile log data.')[:180]}...</p>
+                    """, unsafe_allow_html=True)
+                    
+                    is_saved = any(item['id'] == movie['id'] for item in st.session_state.my_library)
+                    if is_saved:
+                        st.button("Saved inside Vault ✓", key=f"feed_sv_{movie['id']}_{idx}", disabled=True, use_container_width=True)
+                    else:
+                        if st.button("💾 Save to Library", key=f"feed_add_{movie['id']}_{idx}", use_container_width=True):
+                            st.session_state.my_library.append(movie)
+                            st.rerun()
+
+# ==========================================
+# TAB 4: DEDICATED VAULT LIBRARY
+# ==========================================
+with tab4:
     st.header("📂 My Collection Vault")
     st.write("Your personal catalogued storage logs.")
     
@@ -266,7 +312,7 @@ with tab3:
             with col_v2:
                 st.subheader(lib_movie['title'])
                 st.write(f"**Released:** {lib_movie.get('release_date', 'Unknown')}")
-                st.write(lib_movie.get('overview', 'No summary summary profile uploaded.'))
+                st.write(lib_movie.get('overview', 'No summary uploaded.'))
                 if st.button("🗑️ Remove from Vault", key=f"vault_rm_{lib_movie['id']}_{idx}"):
                     st.session_state.my_library.pop(idx)
                     st.rerun()
