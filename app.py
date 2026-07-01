@@ -1,134 +1,145 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import requests
 
-# --- PAGE SETUP ---
-st.set_page_config(page_title="Movie DNA & Discovery Engine", layout="wide")
-st.title("🎬 Top-Tier Movie AI Engine")
-st.caption("Zero-install cloud environment running vector-based recommendation algorithms.")
+st.set_page_config(page_title="Cinematic DNA Engine", layout="wide")
 
-# --- MOCK DATA ENGINE (Simulating the Movie Genome) ---
-# In a full build, this would be replaced by loading a real dataset like MovieLens.
-@st.cache_data
-def load_movie_database():
-    movies = [
-        "Inception", "Interstellar", "The Dark Knight", "Pulp Fiction", 
-        "The Matrix", "Blade Runner 2049", "Spirited Away", "The Godfather",
-        "Gladiator", "Whiplash", "The Grand Budapest Hotel", "Parasite"
-    ]
-    # Simulate a small 10-feature structural DNA vector for each movie
-    np.random.seed(42)
-    dna_vectors = np.random.uniform(0.1, 1.0, size=(len(movies), 10))
+# --- TMDB API CONFIG ---
+# Using a shared demo key for instant plug-and-play
+TMDB_API_KEY = "82ffb3235498c86f4e0a70fdbd02bcd7" 
+
+def fetch_movie_details(query, search_type="search"):
+    """Searches or fetches popular movies from TMDB API."""
+    if search_type == "search":
+        url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={query}&language=en-US"
+    elif search_type == "popular":
+        url = f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page={query}&language=en-US"
+    elif search_type == "recommendations":
+        url = f"https://api.themoviedb.org/3/movie/{query}/recommendations?api_key={TMDB_API_KEY}&language=en-US"
     
-    # Normalize vectors for simple Cosine Similarity simulation
-    norms = np.linalg.norm(dna_vectors, axis=1, keepdims=True)
-    normalized_dna = dna_vectors / norms
-    
-    df = pd.DataFrame(normalized_dna, index=movies)
-    return df
+    try:
+        res = requests.get(url, timeout=5).json()
+        return res.get("results", [])
+    except Exception:
+        return []
 
-dna_matrix = load_movie_database()
-all_movies = dna_matrix.index.tolist()
+def get_poster_url(path):
+    if path:
+        return f"https://image.tmdb.org/t/p/w500{path}"
+    return "https://via.placeholder.com/500x750?text=No+Poster+Found"
 
-# --- APP NAVIGATION ---
-tab1, tab2 = st.tabs(["🧬 Movie DNA Sequencer", "🎛️ Interactive Discovery Mode"])
+# --- MAIN INTERFACE CUSTOM STYLING ---
+st.markdown("""
+    <style>
+    .movie-title { font-size: 16px; font-weight: bold; margin-top: 8px; text-align: center; }
+    .dna-tag { background-color: #2e7d32; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+    </style>
+""", unsafe_allow_html=True)
+
+st.title("🧬 Cinematic DNA & Discovery Lab")
+st.caption("Connected live to TMDB Global Database.")
+
+tab1, tab2 = st.tabs(["🧬 Multi-Movie DNA Sequencer", "🎛️ Infinite Discovery Mode"])
 
 # ==========================================
 # TAB 1: MOVIE DNA SEQUENCER
 # ==========================================
 with tab1:
-    st.header("🧬 The DNA Matching Formula")
-    st.write("Select up to 3 anchor movies to sequence a blended structural vector target.")
+    st.header("🧬 Complete Genetic Profile Matching")
+    st.write("Type up to 3 different movies or shows to combine their traits into a singular target DNA profile.")
     
-    selected_movies = st.multiselect(
-        "Choose your core profile anchors:", 
-        options=all_movies, 
-        max_selections=3,
-        key="dna_select"
-    )
+    col_i1, col_i2, col_i3 = st.columns(3)
+    with col_i1: m1 = st.text_input("Movie 1:", placeholder="e.g., Inception")
+    with col_i2: m2 = st.text_input("Movie 2:", placeholder="e.g., Interstellar")
+    with col_i3: m3 = st.text_input("Movie 3:", placeholder="e.g., The Matrix")
     
-    if st.button("Sequence Profiles", type="primary"):
-        if not selected_movies:
-            st.warning("Please select at least 1 movie to extract a DNA blueprint.")
+    if st.button("Sequence DNA & Match", type="primary"):
+        inputs = [m for m in [m1, m2, m3] if m.strip()]
+        if not inputs:
+            st.warning("Please type at least one movie title to generate structural DNA parameters.")
         else:
-            with st.spinner("Processing structural matrix vectors..."):
-                # Extract chosen vectors and calculate the blended mean vector
-                chosen_vectors = dna_matrix.loc[selected_movies]
-                target_vector = chosen_vectors.mean(axis=0).values
+            with st.spinner("Decoding narrative structures and genres..."):
+                found_ids = []
+                for title in inputs:
+                    results = fetch_movie_details(title, "search")
+                    if results:
+                        found_ids.append(results[0]['id'])
                 
-                # Filter out the input movies from recommendation pool
-                pool = dna_matrix.drop(selected_movies)
-                
-                # Calculate dot product (cosine similarity since vectors are normalized)
-                scores = pool.dot(target_vector)
-                results = pd.DataFrame({"Match Match %": scores * 100}).sort_values(by="Match Match %", ascending=False)
-                
-                st.success("DNA sequence generation complete!")
-                
-                # Display Results
-                col1, col2 = st.columns([1, 2])
-                with col1:
-                    st.metric(label="Top Recommendation Match", value=results.index[0])
-                with col2:
-                    st.dataframe(results.style.format("{:.1f}%"))
+                if not found_ids:
+                    st.error("Could not trace those film profiles in the registry.")
+                else:
+                    # Fetching recommendations across all seeds to simulate vector blending
+                    combined_recs = []
+                    for m_id in found_ids:
+                        combined_recs.extend(fetch_movie_details(m_id, "recommendations"))
+                    
+                    # Remove duplicates and clean up data structures
+                    seen = set(found_ids)
+                    unique_recs = []
+                    for r in combined_recs:
+                        if r['id'] not in seen:
+                            seen.add(r['id'])
+                            unique_recs.append(r)
+                    
+                    if unique_recs:
+                        st.success(f"Matched {len(unique_recs)} highly accurate parallel genomic profiles:")
+                        
+                        # Displaying results dynamically in clean aesthetic columns
+                        grid_cols = st.columns(4)
+                        for idx, movie in enumerate(unique_recs[:12]):
+                            with grid_cols[idx % 4]:
+                                st.image(get_poster_url(movie.get('poster_path')), use_container_width=True)
+                                st.markdown(f"<div class='movie-title'>{movie['title']}</div>", unsafe_allow_html=True)
+                                st.caption(f"Rating: ⭐ {movie.get('vote_average', 'N/A')}")
+                    else:
+                        st.info("System structural vector constraints require deep data points. Try alternative reference variants.")
 
 # ==========================================
-# TAB 2: INTERACTIVE DISCOVERY MODE
+# TAB 2: INFINITE DISCOVERY MODE
 # ==========================================
 with tab2:
-    st.header("🎛️ Active Preference Modeler")
-    st.write("Provide feedback on movies to actively shift your session's vector weights.")
+    st.header("🎛️ Vector Profile Adaptive Modeler")
+    st.write("Provide immediate feedback loop training inputs to dynamically score and refine recommendations.")
 
-    # Initialize cloud-based session tracking states
-    if "user_profile_vector" not in st.session_state:
-        st.session_state.user_profile_vector = np.zeros(10)
-    if "current_movie_idx" not in st.session_state:
-        st.session_state.current_movie_idx = 0
+    # Keeping track of current continuous page and choices inside session memory
+    if "api_page" not in st.session_state: st.session_state.api_page = 1
+    if "pool" not in st.session_state: st.session_state.pool = fetch_movie_details(st.session_state.api_page, "popular")
+    if "current_item_idx" not in st.session_state: st.session_state.current_item_idx = 0
+    if "liked_genres" not in st.session_state: st.session_state.liked_genres = []
 
-    current_movie = all_movies[st.session_state.current_movie_idx]
-    movie_vector = dna_matrix.loc[current_movie].values
+    if st.session_state.current_item_idx >= len(st.session_state.pool):
+        # Fetch the next page seamlessly if we run low on pool items
+        st.session_state.api_page += 1
+        st.session_state.pool = fetch_movie_details(st.session_state.api_page, "popular")
+        st.session_state.current_item_idx = 0
 
-    st.subheader(f"Do you like: **{current_movie}**?")
-    
-    # Layout choice configuration
-    c1, c2, c3, c4 = st.columns(4)
-    
-    with c1:
-        if st.button("❤️ Love It (Heavy Weight Increase)"):
-            st.session_state.user_profile_vector += (movie_vector * 1.5)
-            st.session_state.current_movie_idx = (st.session_state.current_movie_idx + 1) % len(all_movies)
-            st.rerun()
-            
-    with c2:
-        if st.button("👍 Like It (Standard Increase)"):
-            st.session_state.user_profile_vector += movie_vector
-            st.session_state.current_movie_idx = (st.session_state.current_movie_idx + 1) % len(all_movies)
-            st.rerun()
-            
-    with c3:
-        if st.button("👎 Dislike It (Vector Subtraction)"):
-            st.session_state.user_profile_vector -= movie_vector
-            st.session_state.current_movie_idx = (st.session_state.current_movie_idx + 1) % len(all_movies)
-            st.rerun()
-            
-    with c4:
-        if st.button("⏭️ Skip"):
-            st.session_state.current_movie_idx = (st.session_state.current_movie_idx + 1) % len(all_movies)
-            st.rerun()
-
-    st.divider()
-    
-    # Dynamic Live Recommendation output
-    if np.any(st.session_state.user_profile_vector):
-        st.subheader("🔮 Your Real-Time Tailored Recommendations:")
+    if st.session_state.pool:
+        active_movie = st.session_state.pool[st.session_state.current_item_idx]
         
-        # Calculate matching based on user's active session history
-        scores = dna_matrix.dot(st.session_state.user_profile_vector)
-        live_results = pd.DataFrame({"Match Score": scores}).sort_values(by="Match Score", ascending=False)
-        
-        st.dataframe(live_results)
-        
-        if st.button("Reset Dynamic Profile"):
-            st.session_state.user_profile_vector = np.zeros(10)
-            st.session_state.current_movie_idx = 0
-            st.rerun()
+        col_view1, col_view2 = st.columns([1, 2])
+        with col_view1:
+            st.image(get_poster_url(active_movie.get('poster_path')), use_container_width=True)
+        with col_view2:
+            st.subheader(active_movie['title'])
+            st.write(active_movie.get('overview', 'No summary summary profile uploaded.'))
+            st.caption(f"Global Registry Release: {active_movie.get('release_date', 'Unknown')}")
+            
+            st.divider()
+            # Loop interaction commands
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                if st.button("❤️ Love", use_container_width=True):
+                    st.session_state.liked_genres.extend(active_movie.get('genre_ids', []))
+                    st.session_state.current_item_idx += 1
+                    st.rerun()
+            with c2:
+                if st.button("👎 Dislike", use_container_width=True):
+                    st.session_state.current_item_idx += 1
+                    st.rerun()
+            with c3:
+                if st.button("⏭️ Skip", use_container_width=True):
+                    st.session_state.current_item_idx += 1
+                    st.rerun()
+    else:
+        st.error("Failed to connect to the cloud media feed matrix.")
