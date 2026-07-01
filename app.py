@@ -31,143 +31,62 @@ def get_poster_url(path):
     if path: return f"https://image.tmdb.org/t/p/w342{path}"
     return "https://via.placeholder.com/342x513?text=No+Poster"
 
-# ==========================================
-# 🔥 PREMIUM HTML/CSS CINEMATIC GLOW THEME
-# ==========================================
+# --- CLEAN CARD TITLES ADJUSTMENT ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-    
-    /* Base Reset and Cinematic Backgrounds */
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        font-family: 'Inter', sans-serif;
-        background-color: #090b0e !important;
-        color: #e2e8f0 !important;
-    }
-    
-    /* Neon Linear Heading */
-    .main-title {
-        font-size: 38px; font-weight: 800; letter-spacing: -0.5px;
-        background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        margin-bottom: 0px;
-    }
-    
-    /* Premium Grid Movie Cards */
-    .movie-card {
-        background: rgba(20, 26, 35, 0.65);
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        border-radius: 12px;
-        padding: 10px;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    .clean-title {
+        font-size: 14px;
+        font-weight: bold;
         text-align: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    .movie-card:hover {
-        transform: translateY(-4px);
-        border-color: rgba(0, 242, 254, 0.5);
-        box-shadow: 0 8px 24px rgba(0, 242, 254, 0.15);
-    }
-    .movie-title-text {
-        font-size: 13px; font-weight: 600; color: #f1f5f9;
-        margin: 8px 0 4px 0; height: 36px; overflow: hidden;
-        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    }
-    
-    /* Custom Sidebar Aesthetics */
-    [data-testid="stSidebar"] {
-        background-color: #0f1319 !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.03);
-    }
-    .sidebar-item {
-        background: rgba(255, 255, 255, 0.02);
-        padding: 8px; border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.03);
-        margin-bottom: 8px;
-    }
-    
-    /* Premium Action Buttons Style Overrides */
-    div.stButton > button {
-        background: linear-gradient(135deg, #161e29, #0f151d) !important;
-        color: #38bdf8 !important;
-        border: 1px solid #1e293b !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
-        transition: all 0.2s ease;
-    }
-    div.stButton > button:hover {
-        background: linear-gradient(135deg, #00f2fe, #4facfe) !important;
-        color: #090b0e !important;
-        border-color: #00f2fe !important;
-        box-shadow: 0 0 14px rgba(0, 242, 254, 0.35);
-    }
-    
-    /* Native Scroll Containers Styling Mod */
-    div[data-testid="stElementContainer"] div[style*="overflow-y: auto"] {
-        background: #0d1015 !important; 
-        border: 1px solid rgba(255,255,255,0.03) !important;
-        border-radius: 12px; padding: 16px;
-    }
-    
-    /* Discovery Deck Container */
-    .discovery-container {
-        background: linear-gradient(145deg, #111622, #0d111a);
-        border: 1px solid rgba(255, 255, 255, 0.03);
-        border-radius: 16px; padding: 24px; margin-top: 10px;
-        box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+        margin-top: 5px;
+        min-height: 40px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- APPARATUS HEADER ---
-st.markdown("<div class='main-title'>🧬 CINEMATIC DNA LAB</div>", unsafe_allow_html=True)
-st.markdown("<p style='color:#64748b; font-size:14px; margin-top: -5px;'>Next-generation multi-vector film matching engine.</p>", unsafe_allow_html=True)
-st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+# --- MAIN APP TITLE ---
+st.title("🧬 Cinematic DNA & Discovery Lab")
+st.subheader("Next-generation multi-vector film matching engine")
 
-# --- SIDEBAR: HIGH FIDELITY VAULT ---
+# --- SIDEBAR: USER VAULT ---
 with st.sidebar:
-    st.markdown("<h3 style='color: #38bdf8; font-size:18px; margin-bottom:15px;'>📂 MY VAULT</h3>", unsafe_allow_html=True)
-    st.caption("Saved properties dynamically mapping algorithmic bias loops.")
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+    st.header("📂 My Vault")
+    st.write("Saved movies actively training your custom match settings:")
     
     if not st.session_state.my_library:
-        st.info("System storage bank unallocated. Add records below.")
+        st.info("Your vault is currently empty. Click 'Add 💾' on any movie card to save it here!")
     else:
         for idx, lib_movie in enumerate(st.session_state.my_library):
-            st.markdown("<div class='sidebar-item'>", unsafe_allow_html=True)
-            col_l1, col_l2 = st.columns([1, 3])
+            col_l1, col_l2 = st.columns([1, 2])
             with col_l1:
                 st.image(get_poster_url(lib_movie.get('poster_path')), use_container_width=True)
             with col_l2:
-                st.markdown(f"<div style='font-size:12px; font-weight:600; line-height:1.2; color:#f1f5f9; margin-bottom:6px;'>{lib_movie['title']}</div>", unsafe_allow_html=True)
+                st.write(f"**{lib_movie['title']}**")
                 if st.button("🗑️ Clear", key=f"rm_{lib_movie['id']}_{idx}", use_container_width=True):
                     st.session_state.my_library.pop(idx)
                     st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.divider()
 
-# --- DESIGN WORKSPACE TABS ---
+# --- APP NAVIGATION TABS ---
 tab1, tab2 = st.tabs(["🧬 Multi-Movie DNA Sequencer", "🎛️ Infinite Discovery Mode"])
 
 # ==========================================
 # TAB 1: MOVIE DNA SEQUENCER
 # ==========================================
 with tab1:
-    st.markdown("<p style='color:#94a3b8; font-size:14px;'>Supply up to 3 distinct structural anchors to synthesize a blended structural recommendation output.</p>", unsafe_allow_html=True)
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+    st.write("Supply up to 3 different movies to combine their unique traits into a targeted recommendation blueprint.")
     
     col_i1, col_i2, col_i3 = st.columns(3)
-    with col_i1: m1 = st.text_input("DNA Variant Alpha:", placeholder="e.g., Inception", key="dna_m1")
-    with col_i2: m2 = st.text_input("DNA Variant Beta:", placeholder="e.g., Interstellar", key="dna_m2")
-    with col_i3: m3 = st.text_input("DNA Variant Gamma:", placeholder="e.g., The Matrix", key="dna_m3")
+    with col_i1: m1 = st.text_input("First Anchor Film:", placeholder="e.g., Inception", key="dna_m1")
+    with col_i2: m2 = st.text_input("Second Anchor Film:", placeholder="e.g., Interstellar", key="dna_m2")
+    with col_i3: m3 = st.text_input("Third Anchor Film:", placeholder="e.g., The Matrix", key="dna_m3")
     
-    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
-    if st.button("🧬 SYNTHESIZE COMBINED BLUEPRINT", type="primary", use_container_width=True):
+    if st.button("🧬 Compute Combined Blueprint", type="primary", use_container_width=True):
         inputs = [m for m in [m1, m2, m3] if m.strip()]
         if not inputs:
-            st.warning("Input titles to map dimensional target similarities.")
+            st.warning("Please type a movie title above to extract a profile blueprint.")
         else:
-            with st.spinner("Decoding parallel narrative strings..."):
+            with st.spinner("Decoding narrative structures and genres..."):
                 found_ids = []
                 for title in inputs:
                     search_res = fetch_movie_details(title, "search")
@@ -186,9 +105,10 @@ with tab1:
                 st.session_state.dna_results = unique_recs
 
     if st.session_state.dna_results:
-        st.markdown(f"<p style='color:#00f2fe; font-size:14px; font-weight:600; margin-top:20px;'>Generated Vectors Found: {len(st.session_state.dna_results)} Structural Variants</p>", unsafe_allow_html=True)
+        st.write(f"### Found Profiles Match Loop ({len(st.session_state.dna_results)} Results)")
         
-        with st.container(height=580, border=True):
+        # Fixed scrollable clean gallery view
+        with st.container(height=600, border=True):
             cols_per_row = 5
             for i in range(0, len(st.session_state.dna_results), cols_per_row):
                 row_movies = st.session_state.dna_results[i : i + cols_per_row]
@@ -196,14 +116,9 @@ with tab1:
                 
                 for idx, movie in enumerate(row_movies):
                     with grid_cols[idx]:
-                        st.markdown(f"""
-                            <div class='movie-card'>
-                                <img src='{get_poster_url(movie.get('poster_path'))}' style='width:100%; border-radius:8px;'>
-                                <div class='movie-title-text'>{movie['title']}</div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        st.image(get_poster_url(movie.get('poster_path')), use_container_width=True)
+                        st.markdown(f"<div class='clean-title'>{movie['title']}</div>", unsafe_allow_html=True)
                         
-                        st.markdown("<div style='margin-top:4px;'></div>", unsafe_allow_html=True)
                         is_saved = any(item['id'] == movie['id'] for item in st.session_state.my_library)
                         if is_saved:
                             st.button("Saved ✓", key=f"dna_sv_{movie['id']}", disabled=True, use_container_width=True)
@@ -217,7 +132,7 @@ with tab1:
 # TAB 2: INFINITE DISCOVERY MODE
 # ==========================================
 with tab2:
-    st.markdown("<p style='color:#94a3b8; font-size:14px;'>Train real-time feedback mechanisms continuously. Machine cycles update after each interaction execution.</p>", unsafe_allow_html=True)
+    st.write("Rate movies as they appear to dynamically change and refine your real-time session updates.")
 
     if "api_page" not in st.session_state: st.session_state.api_page = 1
     if "pool" not in st.session_state: st.session_state.pool = fetch_movie_details(st.session_state.api_page, "popular")
@@ -231,17 +146,16 @@ with tab2:
     if st.session_state.pool:
         active_movie = st.session_state.pool[st.session_state.current_item_idx]
         
-        st.markdown("<div class='discovery-container'>", unsafe_allow_html=True)
         col_view1, col_view2 = st.columns([1, 2])
         
         with col_view1:
             st.image(get_poster_url(active_movie.get('poster_path')), use_container_width=True)
         with col_view2:
-            st.markdown(f"<h2 style='margin-top:0; margin-bottom:8px; color:#00f2fe; font-weight:700;'>{active_movie['title']}</h2>", unsafe_allow_html=True)
-            st.markdown(f"<p style='color:#64748b; font-size:13px; margin-bottom:20px;'>Rating Profile: ⭐ {active_movie.get('vote_average', 'N/A')} | Generation: {active_movie.get('release_date', 'Unknown')}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='color:#cbd5e1; font-size:14px; line-height:1.6; min-height:120px;'>{active_movie.get('overview', 'No textual profile summary distributed.')}</p>", unsafe_allow_html=True)
+            st.title(active_movie['title'])
+            st.write(f"**Global Rating:** ⭐ {active_movie.get('vote_average', 'N/A')} | **Release:** {active_movie.get('release_date', 'Unknown')}")
+            st.write(active_movie.get('overview', 'No summary summary profile uploaded.'))
             
-            st.markdown("<div style='margin-top:35px;'></div>", unsafe_allow_html=True)
+            st.divider()
             c1, c2, c3, c4 = st.columns(4)
             with c1:
                 if st.button("❤️ Love & Save", use_container_width=True, key="disc_love"):
@@ -251,16 +165,15 @@ with tab2:
                     st.session_state.current_item_idx += 1
                     st.rerun()
             with c2:
-                if st.button("👍 Like Variant", use_container_width=True, key="disc_like"):
+                if st.button("👍 Like", use_container_width=True, key="disc_like"):
                     st.session_state.liked_genres.extend(active_movie.get('genre_ids', []))
                     st.session_state.current_item_idx += 1
                     st.rerun()
             with c3:
-                if st.button("👎 Discard Node", use_container_width=True, key="disc_dis"):
+                if st.button("👎 Dislike", use_container_width=True, key="disc_dis"):
                     st.session_state.current_item_idx += 1
                     st.rerun()
             with c4:
-                if st.button("Skip Frame ⏭️", use_container_width=True, key="disc_skp"):
+                if st.button("Skip ⏭️", use_container_width=True, key="disc_skp"):
                     st.session_state.current_item_idx += 1
                     st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
