@@ -235,4 +235,32 @@ with tab2:
         col_view1, col_view2 = st.columns([1, 2])
         
         with col_view1:
-            st.image(get_poster_url(active_movie.get('poster_
+            st.image(get_poster_url(active_movie.get('poster_path')), use_container_width=True)
+        with col_view2:
+            st.markdown(f"<h2 style='margin-top:0; margin-bottom:8px; color:#00f2fe; font-weight:700;'>{active_movie['title']}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:#64748b; font-size:13px; margin-bottom:20px;'>Rating Profile: ⭐ {active_movie.get('vote_average', 'N/A')} | Generation: {active_movie.get('release_date', 'Unknown')}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:#cbd5e1; font-size:14px; line-height:1.6; min-height:120px;'>{active_movie.get('overview', 'No textual profile summary distributed.')}</p>", unsafe_allow_html=True)
+            
+            st.markdown("<div style='margin-top:35px;'></div>", unsafe_allow_html=True)
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                if st.button("❤️ Love & Save", use_container_width=True, key="disc_love"):
+                    if not any(item['id'] == active_movie['id'] for item in st.session_state.my_library):
+                        st.session_state.my_library.append(active_movie)
+                    st.session_state.liked_genres.extend(active_movie.get('genre_ids', []))
+                    st.session_state.current_item_idx += 1
+                    st.rerun()
+            with c2:
+                if st.button("👍 Like Variant", use_container_width=True, key="disc_like"):
+                    st.session_state.liked_genres.extend(active_movie.get('genre_ids', []))
+                    st.session_state.current_item_idx += 1
+                    st.rerun()
+            with c3:
+                if st.button("👎 Discard Node", use_container_width=True, key="disc_dis"):
+                    st.session_state.current_item_idx += 1
+                    st.rerun()
+            with c4:
+                if st.button("Skip Frame ⏭️", use_container_width=True, key="disc_skp"):
+                    st.session_state.current_item_idx += 1
+                    st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
